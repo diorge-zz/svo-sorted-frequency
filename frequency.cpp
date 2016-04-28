@@ -1,6 +1,6 @@
 /*!
- * \file        naivefrequency.cpp
- * \brief       Program for frequency count of SVO{N} files.
+ * \file        frequency.cpp
+ * \brief       Program for frequency count of sorted SVO{N} files.
  * \author      Diorge Brognara
  * \date        2016
  * \copyright   Copyright (C) Diorge Brognara 2016. All rights MIT Licensed.
