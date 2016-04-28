@@ -31,10 +31,8 @@ using sonTriple = std::tuple<std::string, std::string, size_t>;
 
 
 struct sndgt {
-    template <class T1, class T2, class T3>
-    bool operator () (const std::tuple<T1, T2, T3> &p1,
-                             const std::tuple<T1, T2, T3> &p2) const {
-        return std::get<2>(p1) > std::get<2>(p2);
+    bool operator () (const sonTriple &t1, const sonTriple &t2) const {
+        return std::get<2>(t1) > std::get<2>(t2);
     }
 };
 
@@ -73,14 +71,11 @@ int main(int argc, char** argv) {
       return -1;
    }
 
-   auto sndgtr =
-       [] (const sonTriple& t1, const sonTriple& t2)
-       { return std::get<2>(t1) > std::get<2>(t2); };
 
    std::ios_base::sync_with_stdio(false);
    std::string currentSubject = "";
    std::unordered_map<std::string, size_t> current;
-   std::set<sonTriple, decltype(sndgtr)> total(sndgtr);
+   std::set<sonTriple, sndgt> total;
 
 
    while (std::cin.peek() != std::char_traits<char>::eof()) {
@@ -98,10 +93,10 @@ int main(int argc, char** argv) {
         }
         current.clear();
         size_t n = std::min(total.size(), (size_t)pairCount);
-        std::set<sonTriple, decltype(sndgtr)>::iterator nth = total.cbegin();
+        std::set<sonTriple, sndgt>::iterator nth = total.cbegin();
         for (size_t i = 0; i < n; i++)
             ++nth;
-        std::set<sonTriple, decltype(sndgtr)>::iterator last = total.cend();
+        std::set<sonTriple, sndgt>::iterator last = total.cend();
         total.erase(nth, last);
       }
       current[row.o] += row.n;
