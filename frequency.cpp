@@ -6,16 +6,15 @@
  * \copyright   Copyright (C) Diorge Brognara 2016. All rights MIT Licensed.
 */
 
+#include <stddef.h>
+#include <algorithm>
 #include <iostream>
+#include <set>
+#include <stdexcept>
 #include <string>
-#include <queue>
+#include <tuple>
 #include <unordered_map>
 #include <utility>
-#include <algorithm>
-#include <sstream>
-#include <vector>
-#include <stdexcept>
-#include <set>
 
 
 //! Data in each row in the SVO{N} file
