@@ -30,7 +30,8 @@ struct SvoRow {
 using sonTriple = std::tuple<std::string, std::string, long int>;
 
 
-struct sndgt {
+//! Compares two sonTriples, used for sorting by highest N
+struct higherNfirst {
     bool operator () (const sonTriple &t1, const sonTriple &t2) const {
         return std::get<2>(t1) > std::get<2>(t2);
     }
@@ -75,7 +76,7 @@ int main(int argc, char** argv) {
    std::ios_base::sync_with_stdio(false);
    std::string currentSubject = "";
    std::unordered_map<std::string, size_t> current;
-   std::set<sonTriple, sndgt> total;
+   std::set<sonTriple, higherNfirst> total;
 
 
    while (std::cin.peek() != std::char_traits<char>::eof()) {
@@ -93,10 +94,10 @@ int main(int argc, char** argv) {
         }
         current.clear();
         long int n = std::min((long int)total.size(), pairCount);
-        std::set<sonTriple, sndgt>::iterator nth = total.cbegin();
+        std::set<sonTriple, higherNfirst>::iterator nth = total.cbegin();
         for (long int i = 0; i < n; i++)
             ++nth;
-        std::set<sonTriple, sndgt>::iterator last = total.cend();
+        std::set<sonTriple, higherNfirst>::iterator last = total.cend();
         total.erase(nth, last);
       }
       current[row.o] += row.n;
