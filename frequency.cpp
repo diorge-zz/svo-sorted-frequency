@@ -27,7 +27,7 @@ struct SvoRow {
 
 
 //! Triple (Subject, Object, Occurrences) for sorted counting
-using sonTriple = std::tuple<std::string, std::string, size_t>;
+using sonTriple = std::tuple<std::string, std::string, long int>;
 
 
 struct sndgt {
@@ -56,7 +56,7 @@ int main(int argc, char** argv) {
       return -1;
    }
 
-   int pairCount;
+   long int pairCount;
    try {
       pairCount = std::stoi(argv[1]);
       if (pairCount <= 0) {
@@ -92,9 +92,9 @@ int main(int argc, char** argv) {
             total.insert(std::make_tuple(currentSubject, elem.first, elem.second));
         }
         current.clear();
-        size_t n = std::min(total.size(), (size_t)pairCount);
+        long int n = std::min((long int)total.size(), pairCount);
         std::set<sonTriple, sndgt>::iterator nth = total.cbegin();
-        for (size_t i = 0; i < n; i++)
+        for (long int i = 0; i < n; i++)
             ++nth;
         std::set<sonTriple, sndgt>::iterator last = total.cend();
         total.erase(nth, last);
