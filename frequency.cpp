@@ -26,9 +26,8 @@ struct SvoRow {
 };
 
 
-typedef std::pair<std::string, size_t> TPair;
-
-using PriorityType = std::tuple<std::string, std::string, size_t>;
+//! Triple (Subject, Object, Occurrences) for sorted counting
+using sonTriple = std::tuple<std::string, std::string, size_t>;
 
 
 struct sndgt {
@@ -75,13 +74,13 @@ int main(int argc, char** argv) {
    }
 
    auto sndgtr =
-       [] (const PriorityType& t1, const PriorityType& t2)
+       [] (const sonTriple& t1, const sonTriple& t2)
        { return std::get<2>(t1) > std::get<2>(t2); };
 
    std::ios_base::sync_with_stdio(false);
    std::string currentSubject = "";
    std::unordered_map<std::string, size_t> current;
-   std::set<PriorityType, decltype(sndgtr)> total(sndgtr);
+   std::set<sonTriple, decltype(sndgtr)> total(sndgtr);
 
 
    while (std::cin.peek() != std::char_traits<char>::eof()) {
@@ -99,10 +98,10 @@ int main(int argc, char** argv) {
         }
         current.clear();
         size_t n = std::min(total.size(), (size_t)pairCount);
-        std::set<PriorityType, decltype(sndgtr)>::iterator nth = total.cbegin();
+        std::set<sonTriple, decltype(sndgtr)>::iterator nth = total.cbegin();
         for (size_t i = 0; i < n; i++)
             ++nth;
-        std::set<PriorityType, decltype(sndgtr)>::iterator last = total.cend();
+        std::set<sonTriple, decltype(sndgtr)>::iterator last = total.cend();
         total.erase(nth, last);
       }
       current[row.o] += row.n;
