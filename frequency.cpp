@@ -8,23 +8,15 @@
 
 #include <iostream>
 #include <string>
+#include <queue>
 #include <unordered_map>
 #include <utility>
 #include <algorithm>
 #include <sstream>
 #include <vector>
 #include <stdexcept>
+#include <set>
 
-
-/*! \var    typedef std::pair<std::string, std::string> TKey
- *  \brief  (S, O) key used in the mapping
-*/
-typedef std::pair<std::string, std::string> TKey;
-
-/*! \var    typedef std::pair<TKey, int> TPair
-    \brief  type_value used in the mapping
-*/
-typedef std::pair<TKey, int> TPair;
 
 //! Data in each row in the SVO{N} file
 struct SvoRow {
@@ -35,24 +27,18 @@ struct SvoRow {
 };
 
 
-//! Definition of custom hash for std::pair<T1, T2>
-struct hashPair {
-   template <class T1, class T2>
-   std::size_t operator () (const std::pair<T1, T2> &p) const {
-      auto value = 0x345678;
-      auto h1 = std::hash<T1>{}(p.first);
-      auto h2 = std::hash<T2>{}(p.second);
-      value = (100003 * value) ^ h1;
-      value = (100003 * value) ^ h2;
-      return value;
-   }
+typedef std::pair<std::string, size_t> TPair;
+
+using PriorityType = std::tuple<std::string, std::string, size_t>;
+
+
+struct sndgt {
+    template <class T1, class T2, class T3>
+    bool operator () (const std::tuple<T1, T2, T3> &p1,
+                             const std::tuple<T1, T2, T3> &p2) const {
+        return std::get<2>(p1) > std::get<2>(p2);
+    }
 };
-
-
-//! Compares two TPair by greater integer value
-bool compareTuples(TPair a, TPair b) {
-   return a.second > b.second;
-}
 
 
 //! Prints usage message
@@ -89,9 +75,15 @@ int main(int argc, char** argv) {
       return -1;
    }
 
+   auto sndgtr =
+       [] (const PriorityType& t1, const PriorityType& t2)
+       { return std::get<2>(t1) > std::get<2>(t2); };
 
-   std::unordered_map<TKey, int, hashPair> pairs;
    std::ios_base::sync_with_stdio(false);
+   std::string currentSubject = "";
+   std::unordered_map<std::string, size_t> current;
+   std::set<PriorityType, decltype(sndgtr)> total(sndgtr);
+
 
    while (std::cin.peek() != std::char_traits<char>::eof()) {
       SvoRow row;
@@ -101,18 +93,24 @@ int main(int argc, char** argv) {
       std::string tempString;
       std::getline(std::cin, tempString);
       row.n = std::stoi(tempString);
-      pairs[std::make_pair(row.s, row.o)] += row.n;
+
+      if (row.s != currentSubject) {
+        for (auto &elem : current) {
+            total.insert(std::make_tuple(currentSubject, elem.first, elem.second));
+        }
+        current.clear();
+        size_t n = std::min(total.size(), (size_t)pairCount);
+        std::set<PriorityType, decltype(sndgtr)>::iterator nth = total.cbegin();
+        for (size_t i = 0; i < n; i++)
+            ++nth;
+        std::set<PriorityType, decltype(sndgtr)>::iterator last = total.cend();
+        total.erase(nth, last);
+      }
+      current[row.o] += row.n;
+      currentSubject = row.s;
    }
 
-   pairCount = std::min(pairCount, (int)pairs.size());
-   std::vector<TPair> ordered;
-   ordered.resize(pairCount);
-
-   std::partial_sort_copy(pairs.begin(), pairs.end(),
-                     ordered.begin(), ordered.end(), compareTuples);
-
-   for (auto &elem : ordered) {
-      std::cout << "(" << elem.first.first << ", " << elem.first.second
-                  << ") = " << elem.second << "\n";
+   for (auto &v : total) {
+       std::cout << "(" << std::get<0>(v) << ", " << std::get<1>(v) << ") = " << std::get<2>(v) << "\n";
    }
 }
