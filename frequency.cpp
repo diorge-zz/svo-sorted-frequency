@@ -1,30 +1,21 @@
 /*!
- * \file        naivefrequency.cpp
- * \brief       Program for frequency count of SVO{N} files.
+ * \file        frequency.cpp
+ * \brief       Program for frequency count of sorted SVO{N} files.
  * \author      Diorge Brognara
  * \date        2016
  * \copyright   Copyright (C) Diorge Brognara 2016. All rights MIT Licensed.
 */
 
+#include <stddef.h>
+#include <algorithm>
 #include <iostream>
+#include <set>
+#include <stdexcept>
 #include <string>
+#include <tuple>
 #include <unordered_map>
 #include <utility>
-#include <algorithm>
-#include <sstream>
-#include <vector>
-#include <stdexcept>
 
-
-/*! \var    typedef std::pair<std::string, std::string> TKey
- *  \brief  (S, O) key used in the mapping
-*/
-typedef std::pair<std::string, std::string> TKey;
-
-/*! \var    typedef std::pair<TKey, int> TPair
-    \brief  type_value used in the mapping
-*/
-typedef std::pair<TKey, int> TPair;
 
 //! Data in each row in the SVO{N} file
 struct SvoRow {
@@ -35,24 +26,16 @@ struct SvoRow {
 };
 
 
-//! Definition of custom hash for std::pair<T1, T2>
-struct hashPair {
-   template <class T1, class T2>
-   std::size_t operator () (const std::pair<T1, T2> &p) const {
-      auto value = 0x345678;
-      auto h1 = std::hash<T1>{}(p.first);
-      auto h2 = std::hash<T2>{}(p.second);
-      value = (100003 * value) ^ h1;
-      value = (100003 * value) ^ h2;
-      return value;
-   }
+//! Triple (Subject, Object, Occurrences) for sorted counting
+using sonTriple = std::tuple<std::string, std::string, long int>;
+
+
+//! Compares two sonTriples, used for sorting by highest N
+struct higherNfirst {
+    bool operator () (const sonTriple &t1, const sonTriple &t2) const {
+        return std::get<2>(t1) > std::get<2>(t2);
+    }
 };
-
-
-//! Compares two TPair by greater integer value
-bool compareTuples(TPair a, TPair b) {
-   return a.second > b.second;
-}
 
 
 //! Prints usage message
@@ -74,7 +57,7 @@ int main(int argc, char** argv) {
       return -1;
    }
 
-   int pairCount;
+   long int pairCount;
    try {
       pairCount = std::stoi(argv[1]);
       if (pairCount <= 0) {
@@ -90,8 +73,11 @@ int main(int argc, char** argv) {
    }
 
 
-   std::unordered_map<TKey, int, hashPair> pairs;
    std::ios_base::sync_with_stdio(false);
+   std::string currentSubject = "";
+   std::unordered_map<std::string, size_t> current;
+   std::set<sonTriple, higherNfirst> total;
+
 
    while (std::cin.peek() != std::char_traits<char>::eof()) {
       SvoRow row;
@@ -101,18 +87,24 @@ int main(int argc, char** argv) {
       std::string tempString;
       std::getline(std::cin, tempString);
       row.n = std::stoi(tempString);
-      pairs[std::make_pair(row.s, row.o)] += row.n;
+
+      if (row.s != currentSubject) {
+        for (auto &elem : current) {
+            total.insert(std::make_tuple(currentSubject, elem.first, elem.second));
+        }
+        current.clear();
+        long int n = std::min((long int)total.size(), pairCount);
+        std::set<sonTriple, higherNfirst>::iterator nth = total.cbegin();
+        for (long int i = 0; i < n; i++)
+            ++nth;
+        std::set<sonTriple, higherNfirst>::iterator last = total.cend();
+        total.erase(nth, last);
+      }
+      current[row.o] += row.n;
+      currentSubject = row.s;
    }
 
-   pairCount = std::min(pairCount, (int)pairs.size());
-   std::vector<TPair> ordered;
-   ordered.resize(pairCount);
-
-   std::partial_sort_copy(pairs.begin(), pairs.end(),
-                     ordered.begin(), ordered.end(), compareTuples);
-
-   for (auto &elem : ordered) {
-      std::cout << "(" << elem.first.first << ", " << elem.first.second
-                  << ") = " << elem.second << "\n";
+   for (auto &v : total) {
+       std::cout << "(" << std::get<0>(v) << ", " << std::get<1>(v) << ") = " << std::get<2>(v) << "\n";
    }
 }
